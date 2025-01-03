@@ -1,4 +1,5 @@
 import json
+
 from nonebot import get_plugin_config, get_bot, logger
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment
 from nonebot.plugin import PluginMetadata
@@ -10,21 +11,21 @@ from .config import Config
 __plugin_meta__ = PluginMetadata(
     name="pal_breed",
     description="获取帕鲁的配种信息",
-    homepage="nonebot_plugin_palbreed"
+    homepage="nonebot_plugin_palbreed",
     usage="通过发送对应格式的消息，来获取帕鲁的配种信息",
-    type="application"
+    type="application",
     config=Config,
 )
 config = get_plugin_config(Config)
 
 # 匹配格式：以#开头，两个字符串中间需要有一个+号
 
-get_breed = on_regex(r"^#(.*)\+(.*)", priority=1, block=True)
-get_process = on_regex(r"^#(.*)", priority=1, block=True)
+get_breed = on_regex(r"^#([\w\u4e00-\u9fa5]+)\+([\w\u4e00-\u9fa5]+)$", priority=1, block=True)
+get_process = on_regex(r"^#([\w\u4e00-\u9fa5]+)$", priority=1, block=True)
 upload_data = on_regex(r"^/更新数据", priority=1, block=True)
 
 
-async def get_breed_list(p1: str, p2: str, p3: str) -> dict:
+async def get_breed_list(p1: str, p2: str, p3: str = "all") -> dict:
     url = config.api_url
     url = url.replace("?", p1, 1).replace("?", p2, 1)
     if p1 == "all" and p2 == "all":
@@ -114,7 +115,7 @@ async def handle_upload_data(event: GroupMessageEvent):
     try:
         re = MessageSegment.reply(event.message_id)
         await upload_data.send(re + "正在尝试更新数据，请稍后...")
-        async with httpx.AsyncClient() as client:
+        async with AsyncClient as client:
             response = await client.get(
                 "https://cn.palworldbreed.com/_next/data/QlGgTQeBY0eTQxyIDL1jc/zh-CN/all/all/all.json")
 
